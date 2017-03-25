@@ -64,7 +64,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.Toolbar;
 
 import java.security.InvalidParameterException;
@@ -75,7 +74,6 @@ import java.util.List;
 import butterknife.BindInt;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import io.plaidapp.R;
 import io.plaidapp.data.DataManager;
 import io.plaidapp.data.PlaidItem;
@@ -89,7 +87,6 @@ import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.recyclerview.FilterTouchHelperCallback;
 import io.plaidapp.ui.recyclerview.GridItemDividerDecoration;
 import io.plaidapp.ui.recyclerview.InfiniteScrollListener;
-import io.plaidapp.ui.transitions.FabTransform;
 import io.plaidapp.ui.transitions.MorphTransform;
 import io.plaidapp.util.AnimUtils;
 import io.plaidapp.util.ViewUtils;
@@ -101,8 +98,6 @@ public class HomeActivity extends Activity {
     private static final int RC_AUTH_DRIBBBLE_FOLLOWING = 1;
     private static final int RC_AUTH_DRIBBBLE_USER_LIKES = 2;
     private static final int RC_AUTH_DRIBBBLE_USER_SHOTS = 3;
-    private static final int RC_NEW_DESIGNER_NEWS_STORY = 4;
-    private static final int RC_NEW_DESIGNER_NEWS_LOGIN = 5;
 
     @BindView(R.id.drawer) DrawerLayout drawer;
     @BindView(R.id.toolbar) Toolbar toolbar;
@@ -338,26 +333,6 @@ public class HomeActivity extends Activity {
                         getString(R.string.transition_search_back)).toBundle();
                 startActivityForResult(new Intent(this, SearchActivity.class), RC_SEARCH, options);
                 return true;
-            case R.id.menu_dribbble_login:
-                if (!dribbblePrefs.isLoggedIn()) {
-                    dribbblePrefs.login(HomeActivity.this);
-                } else {
-                    dribbblePrefs.logout();
-                    // TODO something better than a toast!!
-                    Toast.makeText(getApplicationContext(), R.string.dribbble_logged_out, Toast
-                            .LENGTH_SHORT).show();
-                }
-                return true;
-            case R.id.menu_designer_news_login:
-                if (!designerNewsPrefs.isLoggedIn()) {
-                    startActivity(new Intent(this, DesignerNewsLogin.class));
-                } else {
-                    designerNewsPrefs.logout(HomeActivity.this);
-                    // TODO something better than a toast!!
-                    Toast.makeText(getApplicationContext(), R.string.designer_news_logged_out,
-                            Toast.LENGTH_SHORT).show();
-                }
-                return true;
             case R.id.menu_about:
                 startActivity(new Intent(HomeActivity.this, AboutActivity.class),
                         ActivityOptions.makeSceneTransitionAnimation(this).toBundle());
@@ -401,43 +376,6 @@ public class HomeActivity extends Activity {
                     if (newSource) {
                         highlightNewSources(dribbbleSearch, designerNewsSearch);
                     }
-                }
-                break;
-            case RC_NEW_DESIGNER_NEWS_STORY:
-                switch (resultCode) {
-                    case PostNewDesignerNewsStory.RESULT_DRAG_DISMISSED:
-                        // need to reshow the FAB as there's no shared element transition
-                        showFab();
-                        unregisterPostStoryResultListener();
-                        break;
-                    case PostNewDesignerNewsStory.RESULT_POSTING:
-                        showPostingProgress();
-                        break;
-                    default:
-                        unregisterPostStoryResultListener();
-                        break;
-                }
-                break;
-            case RC_NEW_DESIGNER_NEWS_LOGIN:
-                if (resultCode == RESULT_OK) {
-                    showFab();
-                }
-                break;
-            case RC_AUTH_DRIBBBLE_FOLLOWING:
-                if (resultCode == RESULT_OK) {
-                    filtersAdapter.enableFilterByKey(SourceManager.SOURCE_DRIBBBLE_FOLLOWING, this);
-                }
-                break;
-            case RC_AUTH_DRIBBBLE_USER_LIKES:
-                if (resultCode == RESULT_OK) {
-                    filtersAdapter.enableFilterByKey(
-                            SourceManager.SOURCE_DRIBBBLE_USER_LIKES, this);
-                }
-                break;
-            case RC_AUTH_DRIBBBLE_USER_SHOTS:
-                if (resultCode == RESULT_OK) {
-                    filtersAdapter.enableFilterByKey(
-                            SourceManager.SOURCE_DRIBBBLE_USER_SHOTS, this);
                 }
                 break;
         }
@@ -488,26 +426,6 @@ public class HomeActivity extends Activity {
         }
     };
 
-    @OnClick(R.id.fab)
-    protected void fabClick() {
-        if (designerNewsPrefs.isLoggedIn()) {
-            Intent intent = new Intent(this, PostNewDesignerNewsStory.class);
-            FabTransform.addExtras(intent,
-                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
-            intent.putExtra(PostStoryService.EXTRA_BROADCAST_RESULT, true);
-            registerPostStoryResultListener();
-            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
-                    getString(R.string.transition_new_designer_news_post));
-            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_STORY, options.toBundle());
-        } else {
-            Intent intent = new Intent(this, DesignerNewsLogin.class);
-            FabTransform.addExtras(intent,
-                    ContextCompat.getColor(this, R.color.accent), R.drawable.ic_add_dark);
-            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, fab,
-                    getString(R.string.transition_designer_news_login));
-            startActivityForResult(intent, RC_NEW_DESIGNER_NEWS_LOGIN, options.toBundle());
-        }
-    }
 
     BroadcastReceiver postStoryResultReceiver = new BroadcastReceiver() {
         @Override

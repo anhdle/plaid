@@ -74,9 +74,7 @@ import io.plaidapp.data.api.dribbble.ShotWeigher;
 import io.plaidapp.data.api.dribbble.model.Shot;
 import io.plaidapp.data.api.producthunt.PostWeigher;
 import io.plaidapp.data.api.producthunt.model.Post;
-import io.plaidapp.data.pocket.PocketUtils;
 import io.plaidapp.data.prefs.SourceManager;
-import io.plaidapp.ui.transitions.ReflowText;
 import io.plaidapp.ui.widget.BadgedFourThreeImageView;
 import io.plaidapp.util.ObservableColorMatrix;
 import io.plaidapp.util.TransitionUtils;
@@ -153,8 +151,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         switch (viewType) {
-            case TYPE_DESIGNER_NEWS_STORY:
-                return createDesignerNewsStoryHolder(parent);
             case TYPE_DRIBBBLE_SHOT:
                 return createDribbbleShotHolder(parent);
             case TYPE_PRODUCT_HUNT_POST:
@@ -169,15 +165,9 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         switch (getItemViewType(position)) {
-            case TYPE_DESIGNER_NEWS_STORY:
-                bindDesignerNewsStory((Story) getItem(position), (DesignerNewsStoryHolder) holder);
-                break;
             case TYPE_DRIBBBLE_SHOT:
                 bindDribbbleShotHolder(
                         (Shot) getItem(position), (DribbbleShotHolder) holder, position);
-                break;
-            case TYPE_PRODUCT_HUNT_POST:
-                bindProductHuntPostView((Post) getItem(position), (ProductHuntStoryHolder) holder);
                 break;
             case TYPE_LOADING_MORE:
                 bindLoadingViewHolder((LoadingMoreHolder) holder, position);
@@ -195,76 +185,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
             shotHolder.image.setForeground(
                     ContextCompat.getDrawable(host, R.drawable.mid_grey_ripple));
         }
-    }
-
-    @NonNull
-    private DesignerNewsStoryHolder createDesignerNewsStoryHolder(ViewGroup parent) {
-        final DesignerNewsStoryHolder holder = new DesignerNewsStoryHolder(layoutInflater.inflate(
-                R.layout.designer_news_story_item, parent, false), pocketIsInstalled);
-        holder.itemView.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        final Story story = (Story) getItem(holder.getAdapterPosition());
-                        CustomTabActivityHelper.openCustomTab(host,
-                                DesignerNewsStory.getCustomTabIntent(host, story, null).build(),
-                                Uri.parse(story.url));
-                    }
-                }
-            );
-        holder.comments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View commentsView) {
-                final Intent intent = new Intent();
-                intent.setClass(host, DesignerNewsStory.class);
-                intent.putExtra(DesignerNewsStory.EXTRA_STORY,
-                        (Story) getItem(holder.getAdapterPosition()));
-                ReflowText.addExtras(intent, new ReflowText.ReflowableTextView(holder.title));
-                setGridItemContentTransitions(holder.itemView);
-
-                // on return, fade the pocket & comments buttons in
-                host.setExitSharedElementCallback(new SharedElementCallback() {
-                    @Override
-                    public void onSharedElementStart(List<String> sharedElementNames, List<View>
-                            sharedElements, List<View> sharedElementSnapshots) {
-                        host.setExitSharedElementCallback(null);
-                        notifyItemChanged(holder.getAdapterPosition(),
-                                HomeGridItemAnimator.STORY_COMMENTS_RETURN);
-                    }
-                });
-
-                final ActivityOptions options =
-                        ActivityOptions.makeSceneTransitionAnimation(host,
-                                Pair.create((View) holder.title,
-                                        host.getString(R.string.transition_story_title)),
-                                Pair.create(holder.itemView,
-                                        host.getString(R.string.transition_story_title_background)),
-                                Pair.create(holder.itemView,
-                                        host.getString(R.string.transition_story_background)));
-                host.startActivity(intent, options.toBundle());
-            }
-        });
-        if (pocketIsInstalled) {
-            holder.pocket.setImageAlpha(178); // grumble... no xml setter, grumble...
-            holder.pocket.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(final View view) {
-                    PocketUtils.addToPocket(host,
-                            ((Story) getItem(holder.getAdapterPosition())).url);
-                    // notify changed with a payload asking RV to run the anim
-                    notifyItemChanged(holder.getAdapterPosition(),
-                            HomeGridItemAnimator.ADD_TO_POCKET);
-                }
-            });
-        }
-        return holder;
-    }
-
-    private void bindDesignerNewsStory(final Story story, final DesignerNewsStoryHolder holder) {
-        holder.title.setText(story.title);
-        holder.title.setAlpha(1f); // interrupted add to pocket anim can mangle
-        holder.comments.setText(String.valueOf(story.comment_count));
-        holder.itemView.setTransitionName(story.url);
     }
 
     @NonNull
