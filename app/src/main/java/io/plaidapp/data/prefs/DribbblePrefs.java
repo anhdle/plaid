@@ -69,7 +69,6 @@ public class DribbblePrefs {
     private String userAvatar;
     private String userType;
     private DribbbleService api;
-    private List<DribbbleLoginStatusListener> loginStatusListeners;
 
     public static DribbblePrefs get(Context context) {
         if (singleton == null) {
@@ -94,40 +93,9 @@ public class DribbblePrefs {
         }
     }
 
-    public interface DribbbleLoginStatusListener {
-        void onDribbbleLogin();
-        void onDribbbleLogout();
-    }
 
     public boolean isLoggedIn() {
         return isLoggedIn;
-    }
-
-    public void setAccessToken(String accessToken) {
-        if (!TextUtils.isEmpty(accessToken)) {
-            this.accessToken = accessToken;
-            isLoggedIn = true;
-            prefs.edit().putString(KEY_ACCESS_TOKEN, accessToken).apply();
-            createApi();
-            dispatchLoginEvent();
-        }
-    }
-
-    public void setLoggedInUser(User user) {
-        if (user != null) {
-            userName = user.name;
-            userUsername = user.username;
-            userId = user.id;
-            userAvatar = user.avatar_url;
-            userType = user.type;
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putLong(KEY_USER_ID, userId);
-            editor.putString(KEY_USER_NAME, userName);
-            editor.putString(KEY_USER_USERNAME, userUsername);
-            editor.putString(KEY_USER_AVATAR, userAvatar);
-            editor.putString(KEY_USER_TYPE, userType);
-            editor.apply();
-        }
     }
 
     public long getUserId() {
@@ -165,57 +133,7 @@ public class DribbblePrefs {
         return api;
     }
 
-    public void logout() {
-        isLoggedIn = false;
-        accessToken = null;
-        userId = 0l;
-        userName = null;
-        userUsername = null;
-        userAvatar = null;
-        userType = null;
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(KEY_ACCESS_TOKEN, null);
-        editor.putLong(KEY_USER_ID, 0l);
-        editor.putString(KEY_USER_NAME, null);
-        editor.putString(KEY_USER_AVATAR, null);
-        editor.putString(KEY_USER_TYPE, null);
-        editor.apply();
-        createApi();
-        dispatchLogoutEvent();
-    }
 
-    public void login(Context context) {
-        context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(LOGIN_URL)));
-    }
-
-    public void addLoginStatusListener(DribbbleLoginStatusListener listener) {
-        if (loginStatusListeners == null) {
-            loginStatusListeners = new ArrayList<>();
-        }
-        loginStatusListeners.add(listener);
-    }
-
-    public void removeLoginStatusListener(DribbbleLoginStatusListener listener) {
-        if (loginStatusListeners != null) {
-            loginStatusListeners.remove(listener);
-        }
-    }
-
-    private void dispatchLoginEvent() {
-        if (loginStatusListeners != null && !loginStatusListeners.isEmpty()) {
-            for (DribbbleLoginStatusListener listener : loginStatusListeners) {
-                listener.onDribbbleLogin();
-            }
-        }
-    }
-
-    private void dispatchLogoutEvent() {
-        if (loginStatusListeners != null && !loginStatusListeners.isEmpty()) {
-            for (DribbbleLoginStatusListener listener : loginStatusListeners) {
-                listener.onDribbbleLogout();
-            }
-        }
-    }
 
     private void createApi() {
         final OkHttpClient client = new OkHttpClient.Builder()

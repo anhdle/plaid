@@ -28,12 +28,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.plaidapp.BuildConfig;
 import io.plaidapp.data.api.AuthInterceptor;
 import io.plaidapp.data.api.DenvelopingConverter;
-import io.plaidapp.data.api.designernews.DesignerNewsService;
 import io.plaidapp.data.api.dribbble.DribbbleSearchConverter;
 import io.plaidapp.data.api.dribbble.DribbbleSearchService;
 import io.plaidapp.data.api.dribbble.DribbbleService;
-import io.plaidapp.data.api.producthunt.ProductHuntService;
-import io.plaidapp.data.prefs.DesignerNewsPrefs;
 import io.plaidapp.data.prefs.DribbblePrefs;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
@@ -47,15 +44,12 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public abstract class BaseDataManager<T> implements DataLoadingSubject {
 
     private final AtomicInteger loadingCount;
-    private final DesignerNewsPrefs designerNewsPrefs;
     private final DribbblePrefs dribbblePrefs;
     private DribbbleSearchService dribbbleSearchApi;
-    private ProductHuntService productHuntApi;
     private List<DataLoadingSubject.DataLoadingCallbacks> loadingCallbacks;
 
     public BaseDataManager(@NonNull Context context) {
         loadingCount = new AtomicInteger(0);
-        designerNewsPrefs = DesignerNewsPrefs.get(context);
         dribbblePrefs = DribbblePrefs.get(context);
     }
 
@@ -68,25 +62,12 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
         return loadingCount.get() > 0;
     }
 
-    public DesignerNewsPrefs getDesignerNewsPrefs() {
-        return designerNewsPrefs;
-    }
-
-    public DesignerNewsService getDesignerNewsApi() {
-        return designerNewsPrefs.getApi();
-    }
-
     public DribbblePrefs getDribbblePrefs() {
         return dribbblePrefs;
     }
 
     public DribbbleService getDribbbleApi() {
         return dribbblePrefs.getApi();
-    }
-
-    public ProductHuntService getProductHuntApi() {
-        if (productHuntApi == null) createProductHuntApi();
-        return productHuntApi;
     }
 
     public DribbbleSearchService getDribbbleSearchApi() {
@@ -157,20 +138,6 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
                 .addConverterFactory(new DribbbleSearchConverter.Factory())
                 .build()
                 .create((DribbbleSearchService.class));
-    }
-
-    private void createProductHuntApi() {
-        final OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(new AuthInterceptor(BuildConfig.PROCUCT_HUNT_DEVELOPER_TOKEN))
-                .build();
-        final Gson gson = new Gson();
-        productHuntApi = new Retrofit.Builder()
-                .baseUrl(ProductHuntService.ENDPOINT)
-                .client(client)
-                .addConverterFactory(new DenvelopingConverter(gson))
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build()
-                .create(ProductHuntService.class);
     }
 
 }

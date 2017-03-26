@@ -29,8 +29,6 @@ import java.util.Collections;
 import java.util.List;
 
 import io.plaidapp.R;
-import io.plaidapp.ui.PostNewDesignerNewsStory;
-
 /**
  * Helper for working with launcher shortcuts.
  */
@@ -42,25 +40,6 @@ public class ShortcutHelper {
             = Collections.singletonList(POST_SHORTCUT_ID);
 
     private ShortcutHelper() { }
-
-    @TargetApi(Build.VERSION_CODES.N_MR1)
-    public static void enablePostShortcut(@NonNull Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
-        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-
-        Intent intent = new Intent(context, PostNewDesignerNewsStory.class);
-        intent.setAction(Intent.ACTION_VIEW);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        ShortcutInfo postShortcut
-                = new ShortcutInfo.Builder(context, POST_SHORTCUT_ID)
-                .setShortLabel(context.getString(R.string.shortcut_post_short_label))
-                .setLongLabel(context.getString(R.string.shortcut_post_long_label))
-                .setDisabledMessage(context.getString(R.string.shortcut_post_disabled))
-                .setIcon(Icon.createWithResource(context, R.drawable.ic_shortcut_post))
-                .setIntent(intent)
-                .build();
-        shortcutManager.addDynamicShortcuts(Collections.singletonList(postShortcut));
-    }
 
     @TargetApi(Build.VERSION_CODES.N_MR1)
     public static void disablePostShortcut(@NonNull Context context) {

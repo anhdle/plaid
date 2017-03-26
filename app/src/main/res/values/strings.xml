@@ -30,28 +30,14 @@
     <string name="search">Search</string>
     <string name="filter">Filter</string>
     <string name="about">About</string>
-    <string name="dribbble_login">Log in to Dribbble</string>
-    <string name="dribbble_log_out">Log out of Dribbble</string>
-    <string name="dribbble_logged_out">Logged out of Dribbble</string>
-    <string name="designer_news_login">Log in to Designer News</string>
-    <string name="designer_news_log_out">Log out of Designer News</string>
-    <string name="designer_news_logged_out">Logged out of Designer News</string>
     <string name="add">Add</string>
     <string name="edit">Edit</string>
     <string name="no_filters_selected">No filters selected, press the filter button above (&#2228;)\nor swipe from the&#160;right</string>
 
     <!-- data sources / filters -->
-    <string name="source_designer_news_popular">Popular Designer News</string>
-    <string name="source_designer_news_recent">Recent Designer News</string>
-    <string name="source_dribbble_popular">Popular Dribbbles</string>
-    <string name="source_dribbble_following">Dribbble following</string>
-    <string name="source_dribbble_user_likes">My Dribbble likes</string>
-    <string name="source_dribbble_user_shots">My Dribbble shots</string>
-    <string name="source_dribbble_recent">Recent Dribbbles</string>
-    <string name="source_dribbble_debuts">Dribbble Debuts</string>
-    <string name="source_dribbble_animated">Dribbble Animated</string>
+
     <string name="source_dribbble_search_material_design">Material Design</string>
-    <string name="source_product_hunt">Product Hunt</string>
+
 
     <!-- Search -->
     <string name="search_hint">Search Dribbble &amp; Designer News</string>

@@ -31,16 +31,6 @@
         android:showAsAction="always" />
 
     <item
-        android:id="@+id/menu_dribbble_login"
-        android:title="@string/dribbble_login"
-        android:showAsAction="never" />
-
-    <item
-        android:id="@+id/menu_designer_news_login"
-        android:title="@string/designer_news_login"
-        android:showAsAction="never" />
-
-    <item
         android:id="@+id/menu_about"
         android:title="@string/about"
         android:showAsAction="never" />

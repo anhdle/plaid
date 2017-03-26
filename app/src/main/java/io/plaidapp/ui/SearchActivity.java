@@ -68,7 +68,6 @@ public class SearchActivity extends Activity {
 
     public static final String EXTRA_QUERY = "EXTRA_QUERY";
     public static final String EXTRA_SAVE_DRIBBBLE = "EXTRA_SAVE_DRIBBBLE";
-    public static final String EXTRA_SAVE_DESIGNER_NEWS = "EXTRA_SAVE_DESIGNER_NEWS";
     public static final int RESULT_CODE_SAVE = 7;
 
     @BindView(R.id.searchback) ImageButton searchBack;
@@ -207,7 +206,6 @@ public class SearchActivity extends Activity {
         Intent saveData = new Intent();
         saveData.putExtra(EXTRA_QUERY, dataManager.getQuery());
         saveData.putExtra(EXTRA_SAVE_DRIBBBLE, saveDribbble.isChecked());
-        saveData.putExtra(EXTRA_SAVE_DESIGNER_NEWS, saveDesignerNews.isChecked());
         setResult(RESULT_CODE_SAVE, saveData);
         dismiss();
     }

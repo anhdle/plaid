@@ -67,18 +67,6 @@
         <item name="initialBadgeColor">@color/gif_badge_dark_image</item>
     </style>
 
-    <style name="Plaid.Translucent.DesignerNewsStory">
-        <item name="android:colorPrimary">@color/designer_news</item>
-        <item name="android:colorAccent">@color/designer_news</item>
-        <item name="android:colorControlActivated">?android:colorAccent</item>
-        <item name="android:statusBarColor">@color/designer_news_dark</item>
-        <item name="android:navigationBarColor">@color/designer_news_super_dark</item>
-        <item name="android:windowSharedElementEnterTransition">@transition/designer_news_story_shared_enter</item>
-        <item name="android:windowSharedElementReturnTransition">@transition/designer_news_story_shared_return</item>
-        <item name="android:windowEnterTransition">@transition/designer_news_story_enter</item>
-        <item name="android:windowReturnTransition">@transition/designer_news_story_return</item>
-    </style>
-
     <style name="Plaid.Translucent.Dribbble">
         <item name="android:colorPrimary">@color/dribbble</item>
         <item name="android:colorAccent">@color/dribbble</item>

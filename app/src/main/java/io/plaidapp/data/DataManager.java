@@ -17,6 +17,7 @@
 package io.plaidapp.data;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.HashMap;
 import java.util.List;
@@ -93,6 +94,7 @@ public abstract class DataManager extends BaseDataManager<List<? extends PlaidIt
 
     private void setupPageIndexes() {
         final List<Source> dateSources = filterAdapter.getFilters();
+        Log.v("datasize", String.valueOf(dateSources.size()));
         pageIndexes = new HashMap<>(dateSources.size());
         for (Source source : dateSources) {
             pageIndexes.put(source.key, 0);

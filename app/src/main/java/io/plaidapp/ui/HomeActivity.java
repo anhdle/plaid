@@ -78,10 +78,7 @@ import io.plaidapp.R;
 import io.plaidapp.data.DataManager;
 import io.plaidapp.data.PlaidItem;
 import io.plaidapp.data.Source;
-import io.plaidapp.data.api.designernews.PostStoryService;
-import io.plaidapp.data.api.designernews.model.Story;
 import io.plaidapp.data.pocket.PocketUtils;
-import io.plaidapp.data.prefs.DesignerNewsPrefs;
 import io.plaidapp.data.prefs.DribbblePrefs;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.recyclerview.FilterTouchHelperCallback;
@@ -117,7 +114,6 @@ public class HomeActivity extends Activity {
     DataManager dataManager;
     FeedAdapter adapter;
     FilterAdapter filtersAdapter;
-    private DesignerNewsPrefs designerNewsPrefs;
     private DribbblePrefs dribbblePrefs;
 
     @Override
@@ -137,22 +133,9 @@ public class HomeActivity extends Activity {
         setExitSharedElementCallback(FeedAdapter.createSharedElementReenterCallback(this));
 
         dribbblePrefs = DribbblePrefs.get(this);
-        designerNewsPrefs = DesignerNewsPrefs.get(this);
-        filtersAdapter = new FilterAdapter(this, SourceManager.getSources(this),
-                new FilterAdapter.FilterAuthoriser() {
-            @Override
-            public void requestDribbbleAuthorisation(View sharedElement, Source forSource) {
-                Intent login = new Intent(HomeActivity.this, DribbbleLogin.class);
-                MorphTransform.addExtras(login,
-                        ContextCompat.getColor(HomeActivity.this, R.color.background_dark),
-                        sharedElement.getHeight() / 2);
-                ActivityOptions options =
-                        ActivityOptions.makeSceneTransitionAnimation(HomeActivity.this,
-                                sharedElement, getString(R.string.transition_dribbble_login));
-                startActivityForResult(login,
-                        getAuthSourceRequestCode(forSource), options.toBundle());
-            }
-        });
+        filtersAdapter = new FilterAdapter(this, SourceManager.getSources(this)
+
+      );
         dataManager = new DataManager(this, filtersAdapter) {
             @Override
             public void onDataLoaded(List<? extends PlaidItem> data) {
@@ -179,9 +162,6 @@ public class HomeActivity extends Activity {
             }
         });
         grid.setHasFixedSize(true);
-        grid.addItemDecoration(new GridItemDividerDecoration(adapter.getDividedViewHolderClasses(),
-                this, R.dimen.divider_height, R.color.divider));
-        grid.setItemAnimator(new HomeGridItemAnimator());
 
         // drawer layout treats fitsSystemWindows specially so we have to handle insets ourselves
         drawer.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
@@ -255,13 +235,11 @@ public class HomeActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        dribbblePrefs.addLoginStatusListener(filtersAdapter);
         checkConnectivity();
     }
 
     @Override
     protected void onPause() {
-        dribbblePrefs.removeLoginStatusListener(filtersAdapter);
         if (monitoringConnectivity) {
             final ConnectivityManager connectivityManager
                     = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -274,11 +252,11 @@ public class HomeActivity extends Activity {
     @Override
     public void onActivityReenter(int resultCode, Intent data) {
         if (data == null || resultCode != RESULT_OK
-                || !data.hasExtra(DribbbleShot.RESULT_EXTRA_SHOT_ID)) return;
+                ) return;
 
         // When reentering, if the shared element is no longer on screen (e.g. after an
         // orientation change) then scroll it into view.
-        final long sharedShotId = data.getLongExtra(DribbbleShot.RESULT_EXTRA_SHOT_ID, -1L);
+        /*final long sharedShotId = data.getLongExtra(DribbbleShot.RESULT_EXTRA_SHOT_ID, -1L);
         if (sharedShotId != -1L                                             // returning from a shot
                 && adapter.getDataItemCount() > 0                           // grid populated
                 && grid.findViewHolderForItemId(sharedShotId) == null) {    // view not attached
@@ -297,27 +275,12 @@ public class HomeActivity extends Activity {
             });
             grid.scrollToPosition(position);
             toolbar.setTranslationZ(-1f);
-        }
+        }*/
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        final MenuItem dribbbleLogin = menu.findItem(R.id.menu_dribbble_login);
-        if (dribbbleLogin != null) {
-            dribbbleLogin.setTitle(dribbblePrefs.isLoggedIn() ?
-                    R.string.dribbble_log_out : R.string.dribbble_login);
-        }
-        final MenuItem designerNewsLogin = menu.findItem(R.id.menu_designer_news_login);
-        if (designerNewsLogin != null) {
-            designerNewsLogin.setTitle(designerNewsPrefs.isLoggedIn() ?
-                    R.string.designer_news_log_out : R.string.designer_news_login);
-        }
         return true;
     }
 
@@ -363,18 +326,15 @@ public class HomeActivity extends Activity {
                     String query = data.getStringExtra(SearchActivity.EXTRA_QUERY);
                     if (TextUtils.isEmpty(query)) return;
                     Source dribbbleSearch = null;
-                    Source designerNewsSearch = null;
+
                     boolean newSource = false;
                     if (data.getBooleanExtra(SearchActivity.EXTRA_SAVE_DRIBBBLE, false)) {
                         dribbbleSearch = new Source.DribbbleSearchSource(query, true);
                         newSource = filtersAdapter.addFilter(dribbbleSearch);
                     }
-                    if (data.getBooleanExtra(SearchActivity.EXTRA_SAVE_DESIGNER_NEWS, false)) {
-                        designerNewsSearch = new Source.DesignerNewsSearchSource(query, true);
-                        newSource |= filtersAdapter.addFilter(designerNewsSearch);
-                    }
+
                     if (newSource) {
-                        highlightNewSources(dribbbleSearch, designerNewsSearch);
+                        highlightNewSources(dribbbleSearch);
                     }
                 }
                 break;
@@ -427,71 +387,7 @@ public class HomeActivity extends Activity {
     };
 
 
-    BroadcastReceiver postStoryResultReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            ensurePostingProgressInflated();
-            switch (intent.getAction()) {
-                case PostStoryService.BROADCAST_ACTION_SUCCESS:
-                    // success animation
-                    AnimatedVectorDrawable complete =
-                            (AnimatedVectorDrawable) getDrawable(R.drawable.avd_upload_complete);
-                    if (complete != null) {
-                        fabPosting.setImageDrawable(complete);
-                        complete.start();
-                        fabPosting.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                fabPosting.setVisibility(View.GONE);
-                            }
-                        }, 2100); // length of R.drawable.avd_upload_complete
-                    }
 
-                    // actually add the story to the grid
-                    Story newStory = intent.getParcelableExtra(PostStoryService.EXTRA_NEW_STORY);
-                    adapter.addAndResort(Collections.singletonList(newStory));
-                    break;
-                case PostStoryService.BROADCAST_ACTION_FAILURE:
-                    // failure animation
-                    AnimatedVectorDrawable failed =
-                            (AnimatedVectorDrawable) getDrawable(R.drawable.avd_upload_error);
-                    if (failed != null) {
-                        fabPosting.setImageDrawable(failed);
-                        failed.start();
-                    }
-                    // remove the upload progress 'fab' and reshow the regular one
-                    fabPosting.animate()
-                            .alpha(0f)
-                            .rotation(90f)
-                            .setStartDelay(2000L) // leave error on screen briefly
-                            .setDuration(300L)
-                            .setInterpolator(AnimUtils.getFastOutSlowInInterpolator(HomeActivity
-                                    .this))
-                            .setListener(new AnimatorListenerAdapter() {
-                                @Override
-                                public void onAnimationEnd(Animator animation) {
-                                    fabPosting.setVisibility(View.GONE);
-                                    fabPosting.setAlpha(1f);
-                                    fabPosting.setRotation(0f);
-                                }
-                            });
-                    break;
-            }
-            unregisterPostStoryResultListener();
-        }
-    };
-
-    void registerPostStoryResultListener() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(PostStoryService.BROADCAST_ACTION_SUCCESS);
-        intentFilter.addAction(PostStoryService.BROADCAST_ACTION_FAILURE);
-        LocalBroadcastManager.getInstance(this).
-                registerReceiver(postStoryResultReceiver, intentFilter);
-    }
-
-    void unregisterPostStoryResultListener() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(postStoryResultReceiver);
-    }
 
     void revealPostingProgress() {
         Animator reveal = ViewAnimationUtils.createCircularReveal(fabPosting,
@@ -534,35 +430,7 @@ public class HomeActivity extends Activity {
         }
     }
 
-    int getAuthSourceRequestCode(Source filter) {
-        switch (filter.key) {
-            case SourceManager.SOURCE_DRIBBBLE_FOLLOWING:
-                return RC_AUTH_DRIBBBLE_FOLLOWING;
-            case SourceManager.SOURCE_DRIBBBLE_USER_LIKES:
-                return RC_AUTH_DRIBBBLE_USER_LIKES;
-            case SourceManager.SOURCE_DRIBBBLE_USER_SHOTS:
-                return RC_AUTH_DRIBBBLE_USER_SHOTS;
-        }
-        throw new InvalidParameterException();
-    }
 
-    private void showPostingProgress() {
-        ensurePostingProgressInflated();
-        fabPosting.setVisibility(View.VISIBLE);
-        // if stub has just been inflated then it will not have been laid out yet
-        if (fabPosting.isLaidOut()) {
-            revealPostingProgress();
-        } else {
-            fabPosting.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-                @Override
-                public void onLayoutChange(View v, int l, int t, int r, int b,
-                                           int oldL, int oldT, int oldR, int oldB) {
-                    fabPosting.removeOnLayoutChangeListener(this);
-                    revealPostingProgress();
-                }
-            });
-        }
-    }
 
     private void setNoFiltersEmptyTextVisibility(int visibility) {
         if (visibility == View.VISIBLE) {

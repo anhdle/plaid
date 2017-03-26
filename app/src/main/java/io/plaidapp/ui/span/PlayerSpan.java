@@ -7,7 +7,6 @@ import android.text.TextUtils;
 import android.view.View;
 
 import in.uncod.android.bypass.style.TouchableUrlSpan;
-import io.plaidapp.ui.PlayerActivity;
 
 /**
  * A span for marking up a dribbble player
@@ -30,16 +29,4 @@ public class PlayerSpan extends TouchableUrlSpan {
         this.playerUsername = playerUsername;
     }
 
-    @Override
-    public void onClick(View view) {
-        Intent intent = new Intent(view.getContext(), PlayerActivity.class);
-        intent.putExtra(PlayerActivity.EXTRA_PLAYER_NAME, playerName);
-        if (playerId > 0l) {
-            intent.putExtra(PlayerActivity.EXTRA_PLAYER_ID, playerId);
-        }
-        if (!TextUtils.isEmpty(playerUsername)) {
-            intent.putExtra(PlayerActivity.EXTRA_PLAYER_USERNAME, playerUsername);
-        }
-        view.getContext().startActivity(intent);
-    }
 }

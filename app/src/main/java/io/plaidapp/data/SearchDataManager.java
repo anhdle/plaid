@@ -21,7 +21,6 @@ import android.content.Context;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.plaidapp.data.api.designernews.model.Story;
 import io.plaidapp.data.api.dribbble.DribbbleSearchService;
 import io.plaidapp.data.api.dribbble.model.Shot;
 import retrofit2.Call;
@@ -52,7 +51,6 @@ public abstract class SearchDataManager extends BaseDataManager<List<? extends P
             page++;
         }
         searchDribbble(query, page);
-        searchDesignerNews(query, page);
     }
 
     public void loadMore() {
@@ -78,35 +76,6 @@ public abstract class SearchDataManager extends BaseDataManager<List<? extends P
 
     public String getQuery() {
         return query;
-    }
-
-    private void searchDesignerNews(final String query, final int resultsPage) {
-        loadStarted();
-        final Call<List<Story>> dnSearchCall = getDesignerNewsApi().search(query, resultsPage);
-        dnSearchCall.enqueue(new Callback<List<Story>>() {
-            @Override
-            public void onResponse(Call<List<Story>> call, Response<List<Story>> response) {
-                if (response.isSuccessful()) {
-                    loadFinished();
-                    List<Story> stories = response.body();
-                    if (stories != null) {
-                        setPage(stories, resultsPage);
-                        setDataSource(stories,
-                                Source.DesignerNewsSearchSource.DESIGNER_NEWS_QUERY_PREFIX + query);
-                        onDataLoaded(stories);
-                    }
-                    inflight.remove(dnSearchCall);
-                } else {
-                    failure(dnSearchCall);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<Story>> call, Throwable t) {
-                failure(dnSearchCall);
-            }
-        });
-        inflight.add(dnSearchCall);
     }
 
     private void searchDribbble(final String query, final int resultsPage) {

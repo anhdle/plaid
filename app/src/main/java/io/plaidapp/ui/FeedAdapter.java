@@ -67,13 +67,9 @@ import io.plaidapp.R;
 import io.plaidapp.data.DataLoadingSubject;
 import io.plaidapp.data.PlaidItem;
 import io.plaidapp.data.PlaidItemSorting;
-import io.plaidapp.data.api.designernews.StoryWeigher;
-import io.plaidapp.data.api.designernews.model.Story;
 import io.plaidapp.data.api.dribbble.PlayerShotsDataManager;
 import io.plaidapp.data.api.dribbble.ShotWeigher;
 import io.plaidapp.data.api.dribbble.model.Shot;
-import io.plaidapp.data.api.producthunt.PostWeigher;
-import io.plaidapp.data.api.producthunt.model.Post;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.widget.BadgedFourThreeImageView;
 import io.plaidapp.util.ObservableColorMatrix;
@@ -92,9 +88,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     public static final int REQUEST_CODE_VIEW_SHOT = 5407;
 
-    private static final int TYPE_DESIGNER_NEWS_STORY = 0;
     private static final int TYPE_DRIBBBLE_SHOT = 1;
-    private static final int TYPE_PRODUCT_HUNT_POST = 2;
     private static final int TYPE_LOADING_MORE = -1;
 
     // we need to hold on to an activity ref for the shared element transitions :/
@@ -111,8 +105,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private boolean showLoadingMore = false;
     private PlaidItemSorting.NaturalOrderWeigher naturalOrderWeigher;
     private ShotWeigher shotWeigher;
-    private StoryWeigher storyWeigher;
-    private PostWeigher postWeigher;
 
     public FeedAdapter(Activity hostActivity,
                        DataLoadingSubject dataLoading,
@@ -153,8 +145,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         switch (viewType) {
             case TYPE_DRIBBBLE_SHOT:
                 return createDribbbleShotHolder(parent);
-            case TYPE_PRODUCT_HUNT_POST:
-                return createProductHuntStoryHolder(parent);
             case TYPE_LOADING_MORE:
                 return new LoadingMoreHolder(
                         layoutInflater.inflate(R.layout.infinite_loading, parent, false));
@@ -192,22 +182,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         final DribbbleShotHolder holder = new DribbbleShotHolder(
                 layoutInflater.inflate(R.layout.dribbble_shot_item, parent, false));
         holder.image.setBadgeColor(initialGifBadgeColor);
-        holder.image.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setClass(host, DribbbleShot.class);
-                intent.putExtra(DribbbleShot.EXTRA_SHOT,
-                        (Shot) getItem(holder.getAdapterPosition()));
-                setGridItemContentTransitions(holder.image);
-                ActivityOptions options =
-                        ActivityOptions.makeSceneTransitionAnimation(host,
-                                Pair.create(view, host.getString(R.string.transition_shot)),
-                                Pair.create(view, host.getString(R.string
-                                        .transition_shot_background)));
-                host.startActivityForResult(intent, REQUEST_CODE_VIEW_SHOT, options.toBundle());
-            }
-        });
+
         // play animated GIFs whilst touched
         holder.image.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -314,43 +289,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         holder.image.setTransitionName(shot.html_url);
     }
 
-    @NonNull
-    private ProductHuntStoryHolder createProductHuntStoryHolder(ViewGroup parent) {
-        final ProductHuntStoryHolder holder = new ProductHuntStoryHolder(
-                layoutInflater.inflate(R.layout.product_hunt_item, parent, false));
-        holder.comments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CustomTabActivityHelper.openCustomTab(
-                        host,
-                        new CustomTabsIntent.Builder()
-                                .setToolbarColor(ContextCompat.getColor(host, R.color.product_hunt))
-                                .addDefaultShareMenuItem()
-                                .build(),
-                        Uri.parse(((Post) getItem(holder.getAdapterPosition())).discussion_url));
-            }
-        });
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                CustomTabActivityHelper.openCustomTab(
-                        host,
-                        new CustomTabsIntent.Builder()
-                                .setToolbarColor(ContextCompat.getColor(host, R.color.product_hunt))
-                                .addDefaultShareMenuItem()
-                                .build(),
-                        Uri.parse(((Post) getItem(holder.getAdapterPosition())).redirect_url));
-            }
-        });
-        return holder;
-    }
-
-    private void bindProductHuntPostView(final Post item, ProductHuntStoryHolder holder) {
-        holder.title.setText(item.name);
-        holder.tagline.setText(item.tagline);
-        holder.comments.setText(String.valueOf(item.comments_count));
-    }
-
     private void bindLoadingViewHolder(LoadingMoreHolder holder, int position) {
         // only show the infinite load progress spinner if there are already items in the
         // grid i.e. it's not the first item & data is being loaded
@@ -363,12 +301,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         if (position < getDataItemCount()
                 && getDataItemCount() > 0) {
             PlaidItem item = getItem(position);
-            if (item instanceof Story) {
-                return TYPE_DESIGNER_NEWS_STORY;
-            } else if (item instanceof Shot) {
+            if (item instanceof Shot) {
                 return TYPE_DRIBBBLE_SHOT;
-            } else if (item instanceof Post) {
-                return TYPE_PRODUCT_HUNT_POST;
             }
         }
         return TYPE_LOADING_MORE;
@@ -418,28 +352,13 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         switch (items.get(0).dataSource) {
             // some sources should just use the natural order i.e. as returned by the API as users
             // have an expectation about the order they appear in
-            case SourceManager.SOURCE_DRIBBBLE_USER_SHOTS:
-            case SourceManager.SOURCE_DRIBBBLE_USER_LIKES:
-            case SourceManager.SOURCE_PRODUCT_HUNT:
-            case PlayerShotsDataManager.SOURCE_PLAYER_SHOTS:
-            case PlayerShotsDataManager.SOURCE_TEAM_SHOTS:
-                if (naturalOrderWeigher == null) {
-                    naturalOrderWeigher = new PlaidItemSorting.NaturalOrderWeigher();
-                }
-                weigher = naturalOrderWeigher;
-                break;
+
             default:
                 // otherwise use our own weight calculation. We prefer this as it leads to a less
                 // regular pattern of items in the grid
                 if (items.get(0) instanceof Shot) {
                     if (shotWeigher == null) shotWeigher = new ShotWeigher();
                     weigher = shotWeigher;
-                } else if (items.get(0) instanceof Story) {
-                    if (storyWeigher == null) storyWeigher = new StoryWeigher();
-                    weigher = storyWeigher;
-                } else if (items.get(0) instanceof Post) {
-                    if (postWeigher == null) postWeigher = new PostWeigher();
-                    weigher = postWeigher;
                 }
         }
         weigher.weigh(items);
@@ -570,9 +489,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     /**
      * Which ViewHolder types require a divider decoration
      */
-    public Class[] getDividedViewHolderClasses() {
-        return new Class[] { DesignerNewsStoryHolder.class, ProductHuntStoryHolder.class };
-    }
 
     @Override
     public void dataStartedLoading() {
@@ -629,30 +545,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     }
 
-    /* package */ static class DesignerNewsStoryHolder extends RecyclerView.ViewHolder {
 
-        @BindView(R.id.story_title) TextView title;
-        @BindView(R.id.story_comments) TextView comments;
-        @BindView(R.id.pocket) ImageButton pocket;
 
-        DesignerNewsStoryHolder(View itemView, boolean pocketIsInstalled) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
-            pocket.setVisibility(pocketIsInstalled ? View.VISIBLE : View.GONE);
-        }
-    }
-
-    /* package */ static class ProductHuntStoryHolder extends RecyclerView.ViewHolder {
-
-        @BindView(R.id.hunt_title) TextView title;
-        @BindView(R.id.tagline) TextView tagline;
-        @BindView(R.id.story_comments) TextView comments;
-
-        ProductHuntStoryHolder(View itemView) {
-            super(itemView);
-            ButterKnife.bind(this, itemView);
-        }
-    }
 
     /* package */ static class LoadingMoreHolder extends RecyclerView.ViewHolder {
 

@@ -49,26 +49,22 @@ import io.plaidapp.util.ViewUtils;
  * Adapter for showing the list of data sources used as filters for the home grid.
  */
 public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterViewHolder>
-        implements ItemTouchHelperAdapter, DribbblePrefs.DribbbleLoginStatusListener {
+        implements ItemTouchHelperAdapter {
 
-    public interface FilterAuthoriser {
-        void requestDribbbleAuthorisation(View sharedElement, Source forSource);
-    }
 
     private static final int FILTER_ICON_ENABLED_ALPHA = 179; // 70%
     private static final int FILTER_ICON_DISABLED_ALPHA = 51; // 20%
 
     private final List<Source> filters;
-    private final FilterAuthoriser authoriser;
     private final Context context;
     private @Nullable List<FiltersChangedCallbacks> callbacks;
 
     public FilterAdapter(@NonNull Context context,
-                         @NonNull List<Source> filters,
-                         @NonNull FilterAuthoriser authoriser) {
+                         @NonNull List<Source> filters
+                        ) {
         this.context = context.getApplicationContext();
         this.filters = filters;
-        this.authoriser = authoriser;
+
         setHasStableIds(true);
     }
 
@@ -102,7 +98,6 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         }
         // didn't already exist, so add it
         filters.add(toAdd);
-        Collections.sort(filters, new Source.SourceComparator());
         dispatchFiltersChanged(toAdd);
         notifyDataSetChanged();
         SourceManager.addSource(toAdd, context);
@@ -141,23 +136,6 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         notifyItemChanged(adapterPosition, FilterAnimator.HIGHLIGHT);
     }
 
-    @Override
-    public void onDribbbleLogin() {
-        // no-op
-    }
-
-    @Override
-    public void onDribbbleLogout() {
-        for (int i = 0; i < filters.size(); i++) {
-            Source filter = filters.get(i);
-            if (filter.active && isAuthorisedDribbbleSource(filter)) {
-                filter.active = false;
-                SourceManager.updateSource(filter, context);
-                dispatchFiltersChanged(filter);
-                notifyItemChanged(i, FilterAnimator.FILTER_DISABLED);
-            }
-        }
-    }
 
     @Override
     public FilterViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -169,10 +147,7 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
                 final int position = holder.getAdapterPosition();
                 if (position == RecyclerView.NO_POSITION) return;
                 final Source filter = filters.get(position);
-                if (isAuthorisedDribbbleSource(filter) &&
-                        !DribbblePrefs.get(holder.itemView.getContext()).isLoggedIn()) {
-                    authoriser.requestDribbbleAuthorisation(holder.filterIcon, filter);
-                } else {
+               {
                     filter.active = !filter.active;
                     holder.filterName.setEnabled(filter.active);
                     notifyItemChanged(position, filter.active ? FilterAnimator.FILTER_ENABLED
@@ -223,10 +198,6 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         return filters.size();
     }
 
-    @Override
-    public long getItemId(int position) {
-        return filters.get(position).key.hashCode();
-    }
 
     @Override
     public void onItemDismiss(int position) {
@@ -257,12 +228,6 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         if (callbacks != null && !callbacks.isEmpty()) {
             callbacks.remove(callback);
         }
-    }
-
-    private boolean isAuthorisedDribbbleSource(Source source) {
-        return source.key.equals(SourceManager.SOURCE_DRIBBBLE_FOLLOWING)
-                || source.key.equals(SourceManager.SOURCE_DRIBBBLE_USER_LIKES)
-                || source.key.equals(SourceManager.SOURCE_DRIBBBLE_USER_SHOTS);
     }
 
     private void dispatchFiltersChanged(Source filter) {

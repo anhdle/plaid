@@ -44,11 +44,6 @@ android {
         buildConfigField "String", "DRIBBBLE_CLIENT_SECRET", "\"${dribbble_client_secret}\""
         buildConfigField "String",
                 "DRIBBBLE_CLIENT_ACCESS_TOKEN", "\"${dribbble_client_access_token}\""
-        buildConfigField "String", "DESIGNER_NEWS_CLIENT_ID", "\"${designer_news_client_id}\""
-        buildConfigField "String",
-                "DESIGNER_NEWS_CLIENT_SECRET", "\"${designer_news_client_secret}\""
-        buildConfigField "String",
-                "PROCUCT_HUNT_DEVELOPER_TOKEN", "\"${product_hunt_developer_token}\""
         def filesAuthorityValue = applicationId + ".shareprovider";
         buildConfigField "String", "FILES_AUTHORITY", "\"${filesAuthorityValue}\""
         manifestPlaceholders = [filesAuthority: filesAuthorityValue]
