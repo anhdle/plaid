@@ -78,13 +78,10 @@ import io.plaidapp.R;
 import io.plaidapp.data.DataManager;
 import io.plaidapp.data.PlaidItem;
 import io.plaidapp.data.Source;
-import io.plaidapp.data.pocket.PocketUtils;
-import io.plaidapp.data.prefs.DribbblePrefs;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.recyclerview.FilterTouchHelperCallback;
-import io.plaidapp.ui.recyclerview.GridItemDividerDecoration;
 import io.plaidapp.ui.recyclerview.InfiniteScrollListener;
-import io.plaidapp.ui.transitions.MorphTransform;
+
 import io.plaidapp.util.AnimUtils;
 import io.plaidapp.util.ViewUtils;
 
@@ -92,9 +89,6 @@ import io.plaidapp.util.ViewUtils;
 public class HomeActivity extends Activity {
 
     private static final int RC_SEARCH = 0;
-    private static final int RC_AUTH_DRIBBBLE_FOLLOWING = 1;
-    private static final int RC_AUTH_DRIBBBLE_USER_LIKES = 2;
-    private static final int RC_AUTH_DRIBBBLE_USER_SHOTS = 3;
 
     @BindView(R.id.drawer) DrawerLayout drawer;
     @BindView(R.id.toolbar) Toolbar toolbar;
@@ -103,7 +97,6 @@ public class HomeActivity extends Activity {
     @BindView(R.id.filters) RecyclerView filtersList;
     @BindView(android.R.id.empty) ProgressBar loading;
     @Nullable @BindView(R.id.no_connection) ImageView noConnection;
-    ImageButton fabPosting;
     GridLayoutManager layoutManager;
     @BindInt(R.integer.num_columns) int columns;
     boolean connected = true;
@@ -114,7 +107,6 @@ public class HomeActivity extends Activity {
     DataManager dataManager;
     FeedAdapter adapter;
     FilterAdapter filtersAdapter;
-    private DribbblePrefs dribbblePrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,7 +124,6 @@ public class HomeActivity extends Activity {
         }
         setExitSharedElementCallback(FeedAdapter.createSharedElementReenterCallback(this));
 
-        dribbblePrefs = DribbblePrefs.get(this);
         filtersAdapter = new FilterAdapter(this, SourceManager.getSources(this)
 
       );
@@ -143,7 +134,7 @@ public class HomeActivity extends Activity {
                 checkEmptyState();
             }
         };
-        adapter = new FeedAdapter(this, dataManager, columns, PocketUtils.isPocketInstalled(this));
+        adapter = new FeedAdapter(this, dataManager, columns);
 
         grid.setAdapter(adapter);
         layoutManager = new GridLayoutManager(this, columns);
@@ -386,31 +377,6 @@ public class HomeActivity extends Activity {
         }
     };
 
-
-
-
-    void revealPostingProgress() {
-        Animator reveal = ViewAnimationUtils.createCircularReveal(fabPosting,
-                (int) fabPosting.getPivotX(),
-                (int) fabPosting.getPivotY(),
-                0f,
-                fabPosting.getWidth() / 2)
-                .setDuration(600L);
-        reveal.setInterpolator(AnimUtils.getFastOutLinearInInterpolator(this));
-        reveal.start();
-        AnimatedVectorDrawable uploading =
-                (AnimatedVectorDrawable) getDrawable(R.drawable.avd_uploading);
-        if (uploading != null) {
-            fabPosting.setImageDrawable(uploading);
-            uploading.start();
-        }
-    }
-
-    void ensurePostingProgressInflated() {
-        if (fabPosting != null) return;
-        fabPosting = (ImageButton) ((ViewStub) findViewById(R.id.stub_posting_progress)).inflate();
-    }
-
     void checkEmptyState() {
         if (adapter.getDataItemCount() == 0) {
             // if grid is empty check whether we're loading or if no filters are selected
@@ -500,21 +466,6 @@ public class HomeActivity extends Activity {
                     .setDuration(900)
                     .setInterpolator(AnimUtils.getFastOutSlowInInterpolator(this));
         }
-    }
-
-    private void showFab() {
-        fab.setAlpha(0f);
-        fab.setScaleX(0f);
-        fab.setScaleY(0f);
-        fab.setTranslationY(fab.getHeight() / 2);
-        fab.animate()
-                .alpha(1f)
-                .scaleX(1f)
-                .scaleY(1f)
-                .translationY(0f)
-                .setDuration(300L)
-                .setInterpolator(AnimUtils.getLinearOutSlowInInterpolator(this))
-                .start();
     }
 
     /**

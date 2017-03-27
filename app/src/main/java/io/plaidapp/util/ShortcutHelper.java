@@ -42,20 +42,6 @@ public class ShortcutHelper {
     private ShortcutHelper() { }
 
     @TargetApi(Build.VERSION_CODES.N_MR1)
-    public static void disablePostShortcut(@NonNull Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
-        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-        shortcutManager.disableShortcuts(DYNAMIC_SHORTCUT_IDS);
-    }
-
-    @TargetApi(Build.VERSION_CODES.N_MR1)
-    public static void reportPostUsed(@NonNull Context context) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
-        ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);
-        shortcutManager.reportShortcutUsed(POST_SHORTCUT_ID);
-    }
-
-    @TargetApi(Build.VERSION_CODES.N_MR1)
     public static void reportSearchUsed(@NonNull Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return;
         ShortcutManager shortcutManager = context.getSystemService(ShortcutManager.class);

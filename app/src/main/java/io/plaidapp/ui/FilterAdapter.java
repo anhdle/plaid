@@ -38,7 +38,6 @@ import java.util.List;
 
 import io.plaidapp.R;
 import io.plaidapp.data.Source;
-import io.plaidapp.data.prefs.DribbblePrefs;
 import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.recyclerview.ItemTouchHelperAdapter;
 import io.plaidapp.util.AnimUtils;
@@ -100,7 +99,7 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         filters.add(toAdd);
         dispatchFiltersChanged(toAdd);
         notifyDataSetChanged();
-        SourceManager.addSource(toAdd, context);
+        //SourceManager.addSource(toAdd, context);
         return true;
     }
 
@@ -109,7 +108,7 @@ public class FilterAdapter extends RecyclerView.Adapter<FilterAdapter.FilterView
         filters.remove(position);
         notifyItemRemoved(position);
         dispatchFilterRemoved(removing);
-        SourceManager.removeSource(removing, context);
+        //SourceManager.removeSource(removing, context);
     }
 
     public int getFilterPosition(Source filter) {

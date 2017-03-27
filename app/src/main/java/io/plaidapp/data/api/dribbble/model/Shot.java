@@ -56,8 +56,6 @@ public class Shot extends PlaidItem implements Parcelable {
     public final String rebounds_url;
     public final boolean animated;
     public final List<String> tags;
-    public User user;
-    public final Team team;
     // todo move this into a decorator
     public boolean hasFadedIn = false;
     public Spanned parsedDescription;
@@ -84,9 +82,7 @@ public class Shot extends PlaidItem implements Parcelable {
                 String projects_url,
                 String rebounds_url,
                 boolean animated,
-                List<String> tags,
-                User user,
-                Team team) {
+                List<String> tags) {
         super(id, title, html_url);
         this.description = description;
         this.width = width;
@@ -109,8 +105,6 @@ public class Shot extends PlaidItem implements Parcelable {
         this.rebounds_url = rebounds_url;
         this.animated = animated;
         this.tags = tags;
-        this.user = user;
-        this.team = team;
     }
 
     protected Shot(Parcel in) {
@@ -140,8 +134,6 @@ public class Shot extends PlaidItem implements Parcelable {
         animated = in.readByte() != 0x00;
         tags = new ArrayList<String>();
         in.readStringList(tags);
-        user = (User) in.readValue(User.class.getClassLoader());
-        team = (Team) in.readValue(Team.class.getClassLoader());
         hasFadedIn = in.readByte() != 0x00;
     }
 
@@ -178,8 +170,6 @@ public class Shot extends PlaidItem implements Parcelable {
         private String rebounds_url;
         private boolean animated;
         private List<String> tags;
-        private User user;
-        private Team team;
 
         public Builder setId(long id) {
             this.id = id;
@@ -226,28 +216,9 @@ public class Shot extends PlaidItem implements Parcelable {
             return this;
         }
 
-        public Builder setAttachmentsCount(long attachments_count) {
-            this.attachments_count = attachments_count;
-            return this;
-        }
-
-        public Builder setReboundsCount(long rebounds_count) {
-            this.rebounds_count = rebounds_count;
-            return this;
-        }
-
-        public Builder setBucketsCount(long buckets_count) {
-            this.buckets_count = buckets_count;
-            return this;
-        }
 
         public Builder setCreatedAt(Date created_at) {
             this.created_at = created_at;
-            return this;
-        }
-
-        public Builder setUpdatedAt(Date updated_at) {
-            this.updated_at = updated_at;
             return this;
         }
 
@@ -256,53 +227,8 @@ public class Shot extends PlaidItem implements Parcelable {
             return this;
         }
 
-        public Builder setAttachmentsUrl(String attachments_url) {
-            this.attachments_url = attachments_url;
-            return this;
-        }
-
-        public Builder setBucketsUrl(String buckets_url) {
-            this.buckets_url = buckets_url;
-            return this;
-        }
-
-        public Builder setCommentsUrl(String comments_url) {
-            this.comments_url = comments_url;
-            return this;
-        }
-
-        public Builder setLikesUrl(String likes_url) {
-            this.likes_url = likes_url;
-            return this;
-        }
-
-        public Builder setProjectsUrl(String projects_url) {
-            this.projects_url = projects_url;
-            return this;
-        }
-
-        public Builder setReboundsUrl(String rebounds_url) {
-            this.rebounds_url = rebounds_url;
-            return this;
-        }
-
         public Builder setAnimated(boolean animated) {
             this.animated = animated;
-            return this;
-        }
-
-        public Builder setTags(List<String> tags) {
-            this.tags = tags;
-            return this;
-        }
-
-        public Builder setUser(User user) {
-            this.user = user;
-            return this;
-        }
-
-        public Builder setTeam(Team team) {
-            this.team = team;
             return this;
         }
 
@@ -311,7 +237,7 @@ public class Shot extends PlaidItem implements Parcelable {
                     likes_count, comments_count, attachments_count, rebounds_count,
                     buckets_count, created_at, updated_at, html_url, attachments_url,
                     buckets_url, comments_url, likes_url, projects_url, rebounds_url, animated,
-                    tags, user, team);
+                    tags);
         }
     }
 
@@ -361,8 +287,6 @@ public class Shot extends PlaidItem implements Parcelable {
         dest.writeString(rebounds_url);
         dest.writeByte((byte) (animated ? 0x01 : 0x00));
         dest.writeStringList(tags);
-        dest.writeValue(user);
-        dest.writeValue(team);
         dest.writeByte((byte) (hasFadedIn ? 0x01 : 0x00));
     }
 }

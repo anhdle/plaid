@@ -67,15 +67,12 @@ import io.plaidapp.R;
 import io.plaidapp.data.DataLoadingSubject;
 import io.plaidapp.data.PlaidItem;
 import io.plaidapp.data.PlaidItemSorting;
-import io.plaidapp.data.api.dribbble.PlayerShotsDataManager;
 import io.plaidapp.data.api.dribbble.ShotWeigher;
 import io.plaidapp.data.api.dribbble.model.Shot;
-import io.plaidapp.data.prefs.SourceManager;
 import io.plaidapp.ui.widget.BadgedFourThreeImageView;
 import io.plaidapp.util.ObservableColorMatrix;
 import io.plaidapp.util.TransitionUtils;
 import io.plaidapp.util.ViewUtils;
-import io.plaidapp.util.customtabs.CustomTabActivityHelper;
 import io.plaidapp.util.glide.DribbbleTarget;
 
 import static io.plaidapp.util.AnimUtils.getFastOutSlowInInterpolator;
@@ -94,8 +91,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     // we need to hold on to an activity ref for the shared element transitions :/
     private final Activity host;
     private final LayoutInflater layoutInflater;
-    private final PlaidItemSorting.PlaidItemComparator comparator;
-    private final boolean pocketIsInstalled;
+    //private final PlaidItemSorting.PlaidItemComparator comparator;
+
     private final @Nullable DataLoadingSubject dataLoading;
     private final int columns;
     private final ColorDrawable[] shotLoadingPlaceholders;
@@ -103,20 +100,18 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private List<PlaidItem> items;
     private boolean showLoadingMore = false;
-    private PlaidItemSorting.NaturalOrderWeigher naturalOrderWeigher;
-    private ShotWeigher shotWeigher;
+    //private ShotWeigher shotWeigher;
 
     public FeedAdapter(Activity hostActivity,
                        DataLoadingSubject dataLoading,
-                       int columns,
-                       boolean pocketInstalled) {
+                       int columns) {
         this.host = hostActivity;
         this.dataLoading = dataLoading;
         dataLoading.registerCallback(this);
         this.columns = columns;
-        this.pocketIsInstalled = pocketInstalled;
+
         layoutInflater = LayoutInflater.from(host);
-        comparator = new PlaidItemSorting.PlaidItemComparator();
+        //comparator = new PlaidItemSorting.PlaidItemComparator();
         items = new ArrayList<>();
         setHasStableIds(true);
 
@@ -332,36 +327,11 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
      * grid columns.
      */
     public void addAndResort(List<? extends PlaidItem> newItems) {
-        weighItems(newItems);
+        //weighItems(newItems);
         deduplicateAndAdd(newItems);
-        sort();
+        //sort();
         expandPopularItems();
         notifyDataSetChanged();
-    }
-
-    /**
-     * Calculate a 'weight' [0, 1] for each data type for sorting. Each data type/source has a
-     * different metric for weighing it e.g. Dribbble uses likes etc. but some sources should keep
-     * the order returned by the API. Weights are 'scoped' to the page they belong to and lower
-     * weights are sorted earlier in the grid (i.e. in ascending weight).
-     */
-    private void weighItems(List<? extends PlaidItem> items) {
-        if (items == null || items.isEmpty()) return;
-
-        PlaidItemSorting.PlaidItemGroupWeigher weigher = null;
-        switch (items.get(0).dataSource) {
-            // some sources should just use the natural order i.e. as returned by the API as users
-            // have an expectation about the order they appear in
-
-            default:
-                // otherwise use our own weight calculation. We prefer this as it leads to a less
-                // regular pattern of items in the grid
-                if (items.get(0) instanceof Shot) {
-                    if (shotWeigher == null) shotWeigher = new ShotWeigher();
-                    weigher = shotWeigher;
-                }
-        }
-        weigher.weigh(items);
     }
 
     /**
@@ -386,10 +356,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private void add(PlaidItem item) {
         items.add(item);
-    }
-
-    private void sort() {
-        Collections.sort(items, comparator); // sort by weight
     }
 
     private void expandPopularItems() {
@@ -431,7 +397,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 items.remove(i);
             }
         }
-        sort();
+        //sort();
         expandPopularItems();
         notifyDataSetChanged();
     }
@@ -544,9 +510,6 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         }
 
     }
-
-
-
 
     /* package */ static class LoadingMoreHolder extends RecyclerView.ViewHolder {
 

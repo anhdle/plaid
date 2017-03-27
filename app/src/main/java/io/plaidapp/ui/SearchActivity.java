@@ -56,7 +56,6 @@ import butterknife.OnClick;
 import io.plaidapp.R;
 import io.plaidapp.data.PlaidItem;
 import io.plaidapp.data.SearchDataManager;
-import io.plaidapp.data.pocket.PocketUtils;
 import io.plaidapp.util.ShortcutHelper;
 import io.plaidapp.ui.recyclerview.InfiniteScrollListener;
 import io.plaidapp.ui.recyclerview.SlideInItemAnimator;
@@ -119,7 +118,7 @@ public class SearchActivity extends Activity {
                 }
             }
         };
-        adapter = new FeedAdapter(this, dataManager, columns, PocketUtils.isPocketInstalled(this));
+        adapter = new FeedAdapter(this, dataManager, columns);
         setExitSharedElementCallback(FeedAdapter.createSharedElementReenterCallback(this));
         results.setAdapter(adapter);
         results.setItemAnimator(new SlideInItemAnimator());

@@ -77,7 +77,7 @@
     <color name="dribbble_super_dark">#ff33292d</color>
     <color name="dribbble_link_highlight">#b3f06292</color>
     <color name="fab_heart_empty">@color/text_primary_light</color>
-    <color name="fab_heart_progress_bar">#deffffff</color> <!-- 87% white-->
+    <color name="fab_heart_progress_bar">#deffffff</color> <!-- 87%  white-->
     <color name="fab_heart_full">#ffffffff</color>
     <color name="gif_badge_light_image">#40000000</color>
     <color name="gif_badge_dark_image">#b3ffffff</color>

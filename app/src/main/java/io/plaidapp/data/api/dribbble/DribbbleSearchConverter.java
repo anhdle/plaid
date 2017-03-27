@@ -30,12 +30,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.plaidapp.data.api.dribbble.model.Images;
 import io.plaidapp.data.api.dribbble.model.Shot;
-import io.plaidapp.data.api.dribbble.model.User;
 import okhttp3.ResponseBody;
 import retrofit2.Converter;
 import retrofit2.Retrofit;
@@ -109,31 +107,6 @@ public class DribbbleSearchConverter implements Converter<ResponseBody, List<Sho
                         ().replaceAll(",", "")))
                 .setViewsCount(Long.parseLong(element.select("li.views").first().child(0)
                         .text().replaceAll(",", "")))
-                .setUser(parsePlayer(element.select("h2").first()))
-                .build();
-    }
-
-    private static User parsePlayer(Element element) {
-        final Element userBlock = element.select("a.url").first();
-        String avatarUrl = userBlock.select("img.photo").first().attr("src");
-        if (avatarUrl.contains("/mini/")) {
-            avatarUrl = avatarUrl.replace("/mini/", "/normal/");
-        }
-        final Matcher matchId = PATTERN_PLAYER_ID.matcher(avatarUrl);
-        Long id = -1l;
-        if (matchId.find() && matchId.groupCount() == 1) {
-            id = Long.parseLong(matchId.group(1));
-        }
-        final String slashUsername = userBlock.attr("href");
-        final String username =
-                TextUtils.isEmpty(slashUsername) ? null : slashUsername.substring(1);
-        return new User.Builder()
-                .setId(id)
-                .setName(userBlock.text())
-                .setUsername(username)
-                .setHtmlUrl(HOST + slashUsername)
-                .setAvatarUrl(avatarUrl)
-                .setPro(element.select("span.badge-pro").size() > 0)
                 .build();
     }
 
