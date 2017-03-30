@@ -24,8 +24,8 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.TransitionRes;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -122,15 +122,15 @@ public class SearchActivity extends Activity {
         setExitSharedElementCallback(FeedAdapter.createSharedElementReenterCallback(this));
         results.setAdapter(adapter);
         results.setItemAnimator(new SlideInItemAnimator());
-        GridLayoutManager layoutManager = new GridLayoutManager(this, columns);
-        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(columns, StaggeredGridLayoutManager.VERTICAL);
+        /*layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
                 return adapter.getItemColumnSpan(position);
             }
-        });
+        });*/
         results.setLayoutManager(layoutManager);
-        results.addOnScrollListener(new InfiniteScrollListener(layoutManager, dataManager) {
+        results.addOnScrollListener(new InfiniteScrollListener(layoutManager, dataManager, columns) {
             @Override
             public void onLoadMore() {
                 dataManager.loadMore();

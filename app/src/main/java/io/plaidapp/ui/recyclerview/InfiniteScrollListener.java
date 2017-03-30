@@ -19,6 +19,7 @@ package io.plaidapp.ui.recyclerview;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 
 import io.plaidapp.data.DataLoadingSubject;
 
@@ -32,13 +33,15 @@ public abstract class InfiniteScrollListener extends RecyclerView.OnScrollListen
     // The minimum number of items remaining before we should loading more.
     private static final int VISIBLE_THRESHOLD = 5;
 
-    private final LinearLayoutManager layoutManager;
+    private final StaggeredGridLayoutManager layoutManager;
     private final DataLoadingSubject dataLoading;
+    private int columns;
 
-    public InfiniteScrollListener(@NonNull LinearLayoutManager layoutManager,
-                                  @NonNull DataLoadingSubject dataLoading) {
+    public InfiniteScrollListener(@NonNull StaggeredGridLayoutManager layoutManager,
+                                  @NonNull DataLoadingSubject dataLoading, int columns) {
         this.layoutManager = layoutManager;
         this.dataLoading = dataLoading;
+        this.columns = columns;
     }
 
     @Override
@@ -48,7 +51,7 @@ public abstract class InfiniteScrollListener extends RecyclerView.OnScrollListen
 
         final int visibleItemCount = recyclerView.getChildCount();
         final int totalItemCount = layoutManager.getItemCount();
-        final int firstVisibleItem = layoutManager.findFirstVisibleItemPosition();
+        final int firstVisibleItem = layoutManager.findFirstCompletelyVisibleItemPositions(new int[columns])[0];
 
         if ((totalItemCount - visibleItemCount) <= (firstVisibleItem + VISIBLE_THRESHOLD)) {
             onLoadMore();

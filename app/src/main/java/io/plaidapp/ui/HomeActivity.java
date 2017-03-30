@@ -16,15 +16,11 @@
 
 package io.plaidapp.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityOptions;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
@@ -37,11 +33,10 @@ import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -55,7 +50,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowInsets;
@@ -66,7 +60,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toolbar;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -97,7 +90,7 @@ public class HomeActivity extends Activity {
     @BindView(R.id.filters) RecyclerView filtersList;
     @BindView(android.R.id.empty) ProgressBar loading;
     @Nullable @BindView(R.id.no_connection) ImageView noConnection;
-    GridLayoutManager layoutManager;
+    StaggeredGridLayoutManager layoutManager;
     @BindInt(R.integer.num_columns) int columns;
     boolean connected = true;
     private TextView noFiltersEmptyText;
@@ -137,16 +130,16 @@ public class HomeActivity extends Activity {
         adapter = new FeedAdapter(this, dataManager, columns);
 
         grid.setAdapter(adapter);
-        layoutManager = new GridLayoutManager(this, columns);
-        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+        layoutManager = new StaggeredGridLayoutManager(columns, StaggeredGridLayoutManager.VERTICAL);
+        /*layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
                 return adapter.getItemColumnSpan(position);
             }
-        });
+        });*/
         grid.setLayoutManager(layoutManager);
         grid.addOnScrollListener(toolbarElevation);
-        grid.addOnScrollListener(new InfiniteScrollListener(layoutManager, dataManager) {
+        grid.addOnScrollListener(new InfiniteScrollListener(layoutManager, dataManager, columns) {
             @Override
             public void onLoadMore() {
                 dataManager.loadAllDataSources();
@@ -364,7 +357,7 @@ public class HomeActivity extends Activity {
             // toolbar is laid out in front of the grid but when we scroll, we lower it's elevation
             // to allow the content to pass in front (and reset when scrolled to top of the grid)
             if (newState == RecyclerView.SCROLL_STATE_IDLE
-                    && layoutManager.findFirstVisibleItemPosition() == 0
+                    && layoutManager.findFirstCompletelyVisibleItemPositions(new int[columns])[0] == 0
                     && layoutManager.findViewByPosition(0).getTop() == grid.getPaddingTop()
                     && toolbar.getTranslationZ() != 0) {
                 // at top, reset elevation

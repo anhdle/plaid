@@ -32,12 +32,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.TransitionDrawable;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.customtabs.CustomTabsIntent;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
 import android.util.Pair;
@@ -165,8 +167,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         if (holder instanceof DribbbleShotHolder) {
             // reset the badge & ripple which are dynamically determined
             DribbbleShotHolder shotHolder = (DribbbleShotHolder) holder;
-            shotHolder.image.setBadgeColor(initialGifBadgeColor);
-            shotHolder.image.showBadge(false);
+            //shotHolder.image.setBadgeColor(initialGifBadgeColor);
+            //shotHolder.image.showBadge(false);
             shotHolder.image.setForeground(
                     ContextCompat.getDrawable(host, R.drawable.mid_grey_ripple));
         }
@@ -176,7 +178,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private DribbbleShotHolder createDribbbleShotHolder(ViewGroup parent) {
         final DribbbleShotHolder holder = new DribbbleShotHolder(
                 layoutInflater.inflate(R.layout.dribbble_shot_item, parent, false));
-        holder.image.setBadgeColor(initialGifBadgeColor);
+        //holder.image.setBadgeColor(initialGifBadgeColor);
 
         // play animated GIFs whilst touched
         holder.image.setOnTouchListener(new View.OnTouchListener() {
@@ -224,6 +226,10 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     private void bindDribbbleShotHolder(final Shot shot,
                                         final DribbbleShotHolder holder,
                                         int position) {
+        if(position == 0) {
+            StaggeredGridLayoutManager.LayoutParams layoutParams = (StaggeredGridLayoutManager.LayoutParams) holder.itemView.getLayoutParams();
+            layoutParams.setFullSpan(true);
+        }
         final int[] imageSize = shot.images.bestSize();
         Glide.with(host)
                 .load(shot.images.best())
@@ -279,7 +285,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         // need both placeholder & background to prevent seeing through shot as it fades in
         holder.image.setBackground(
                 shotLoadingPlaceholders[position % shotLoadingPlaceholders.length]);
-        holder.image.showBadge(shot.animated);
+        //holder.image.showBadge(shot.animated);
         // need a unique transition name per shot, let's use it's url
         holder.image.setTransitionName(shot.html_url);
     }
@@ -330,8 +336,8 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         //weighItems(newItems);
         deduplicateAndAdd(newItems);
         //sort();
-        expandPopularItems();
-        notifyDataSetChanged();
+        //expandPopularItems();
+        //notifyDataSetChanged();
     }
 
     /**
@@ -356,39 +362,16 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     private void add(PlaidItem item) {
         items.add(item);
+        Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                notifyItemInserted(items.size() - 1);
+            }
+        };
+        handler.post(r);
     }
 
-    private void expandPopularItems() {
-        // for now just expand the first dribbble image per page which should be
-        // the most popular according to our weighing & sorting
-        List<Integer> expandedPositions = new ArrayList<>();
-        int page = -1;
-        final int count = items.size();
-        for (int i = 0; i < count; i++) {
-            PlaidItem item = getItem(i);
-            if (item instanceof Shot && item.page > page) {
-                item.colspan = columns;
-                page = item.page;
-                expandedPositions.add(i);
-            } else {
-                item.colspan = 1;
-            }
-        }
-
-        // make sure that any expanded items are at the start of a row
-        // so that we don't leave any gaps in the grid
-        for (int expandedPos = 0; expandedPos < expandedPositions.size(); expandedPos++) {
-            int pos = expandedPositions.get(expandedPos);
-            int extraSpannedSpaces = expandedPos * (columns - 1);
-            int rowPosition = (pos + extraSpannedSpaces) % columns;
-            if (rowPosition != 0) {
-                int swapWith = pos + (columns - rowPosition);
-                if (swapWith < items.size()) {
-                    Collections.swap(items, pos, swapWith);
-                }
-            }
-        }
-    }
 
     public void removeDataSource(String dataSource) {
         for (int i = items.size() - 1; i >= 0; i--) {
@@ -397,8 +380,7 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 items.remove(i);
             }
         }
-        //sort();
-        expandPopularItems();
+
         notifyDataSetChanged();
     }
 
@@ -460,7 +442,17 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
     public void dataStartedLoading() {
         if (showLoadingMore) return;
         showLoadingMore = true;
-        notifyItemInserted(getLoadingMoreItemPosition());
+
+        Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                notifyItemInserted(getLoadingMoreItemPosition());
+            }
+        };
+        handler.post(r);
+
+
     }
 
     @Override
@@ -468,7 +460,17 @@ public class FeedAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         if (!showLoadingMore) return;
         final int loadingPos = getLoadingMoreItemPosition();
         showLoadingMore = false;
-        notifyItemRemoved(loadingPos);
+        Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                notifyItemRemoved(loadingPos);
+            }
+        };
+        handler.post(r);
+
+
+
     }
 
     public static SharedElementCallback createSharedElementReenterCallback(

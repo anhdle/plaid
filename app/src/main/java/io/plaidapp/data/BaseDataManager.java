@@ -18,6 +18,7 @@ package io.plaidapp.data;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.gson.Gson;
 
@@ -78,15 +79,21 @@ public abstract class BaseDataManager<T> implements DataLoadingSubject {
     }
 
     protected void loadStarted() {
+        Log.v("loadingcountstartbef", String.valueOf(loadingCount.get()));
         if (0 == loadingCount.getAndIncrement()) {
             dispatchLoadingStartedCallbacks();
         }
+
+        Log.v("loadingcountstartaf", String.valueOf(loadingCount.get()));
+
     }
 
     protected void loadFinished() {
+        Log.v("loadingcountendbef", String.valueOf(loadingCount.get()));
         if (0 == loadingCount.decrementAndGet()) {
             dispatchLoadingFinishedCallbacks();
         }
+        Log.v("loadingcountendaf", String.valueOf(loadingCount.get()));
     }
 
     protected void resetLoadingCount() {
